@@ -3,7 +3,8 @@ from dataclasses import dataclass
 
 
 class TokenType(Enum):
-    NUMBER = auto() # Any number present in R
+    POSITIVE_NUM = auto() # Any number present in Z+ 
+    NEGATIVE_NUM = auto() # Any number present in Z-
 
     PLUS = auto() # + 
     MINUS = auto() # -
@@ -41,17 +42,31 @@ class Lexer:
         self.pos +=1 
 
 
-    def number(self): 
+    def peek(self):
+        if self.current() is None or self.pos + 1 == len(self.text): 
+            return None
+        return self.text[self.pos +1]
+
+
+
+    def number(self, sign="+"): 
         start = self.pos 
         end = start
 
         while (self.current() is not None and self.current().isdigit()): 
             self.next()
 
-        return Token(
-            TokenType.NUMBER, 
+        if sign == "-" :
+            return Token(
+            TokenType.NEGATIVE_NUM, 
             start, 
             self.pos -1
+            )
+
+        return Token(
+            TokenType.POSITIVE_NUM, 
+            start, 
+            self.pos - 1
         )
 
 
@@ -81,7 +96,13 @@ class Lexer:
                 self.next()
 
             elif ch == "-" : 
-                tokens.append(Token(TokenType.MINUS, start,start)) 
+
+                next_ch = self.peek()
+                if next_ch is not None and next_ch.isdigit(): 
+                    self.next()
+                    tokens.append(self.number("-"))
+                else : 
+                    tokens.append(Token(TokenType.MINUS, start,start))
 
                 self.next()
 
@@ -124,7 +145,7 @@ class Lexer:
 
 
 def main(): 
-    lex = Lexer("1*23")
+    lex = Lexer("1* -23 / 2")
 
     print(lex.tokenize())
         
