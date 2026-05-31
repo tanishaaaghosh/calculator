@@ -6,6 +6,9 @@ class TokenType(Enum):
     POSITIVE_NUM = auto() # Any number present in Z+ 
     NEGATIVE_NUM = auto() # Any number present in Z-
 
+    POSITIVE_DECIMAL = auto() 
+    NEGATIVE_DECIMAL = auto() 
+
     PLUS = auto() # + 
     MINUS = auto() # -
     MUL = auto() # * 
@@ -52,21 +55,38 @@ class Lexer:
     def number(self, sign="+"): 
         start = self.pos 
         end = start
+        isdecimal = False
 
-        while (self.current() is not None and self.current().isdigit()): 
+        while (self.current() is not None and (self.current().isdigit() or self.current() == ".")): 
+            if self.current() == "." : 
+                isdecimal = True
             self.next()
 
         if sign == "-" :
+            if isdecimal : 
+                return Token(
+                    TokenType.NEGATIVE_DECIMAL, 
+                    start, 
+                    self.pos -1
+                )
+            else: 
+                return Token(
+                TokenType.NEGATIVE_NUM, 
+                start, 
+                self.pos -1
+                )
+
+        
+        if not isdecimal: 
             return Token(
-            TokenType.NEGATIVE_NUM, 
+                TokenType.POSITIVE_NUM, 
+                start, 
+                self.pos - 1
+            )
+        return Token(
+            TokenType.POSITIVE_DECIMAL, 
             start, 
             self.pos -1
-            )
-
-        return Token(
-            TokenType.POSITIVE_NUM, 
-            start, 
-            self.pos - 1
         )
 
 
@@ -130,7 +150,7 @@ class Lexer:
 
             else : 
                 raise SyntaxError(
-                    "Invalid Token Found"
+                    f"Invalid Token Found at {self.pos, self.current()}"
                 )
 
         tokens.append(Token(TokenType.EOF, self.pos , self.pos))
@@ -145,7 +165,7 @@ class Lexer:
 
 
 def main(): 
-    lex = Lexer("1* -23 / 2")
+    lex = Lexer("1* -23 / 2.4")
 
     print(lex.tokenize())
         
