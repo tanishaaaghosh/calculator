@@ -19,7 +19,8 @@ class TokenType(Enum):
 @dataclass
 class Token:
     type: TokenType
-    value: str | None = None #+,-,123, *, ^
+    start : int 
+    end : int 
 
 
 
@@ -40,14 +41,92 @@ class Lexer:
         self.pos +=1 
 
 
+    def number(self): 
+        start = self.pos 
+        end = start
+
+        while (self.current() is not None and self.current().isdigit()): 
+            self.next()
+
+        return Token(
+            TokenType.NUMBER, 
+            start, 
+            self.pos -1
+        )
+
+
+    def tokenize(self): 
+
+        tokens = [] 
+
+        while self.current() is not None: 
+
+            ch = self.current() 
+            start = self.pos 
+
+            if ch.isdigit(): 
+                tokens.append(self.number()) 
+
+
+            elif ch.isspace():
+                self.next()
+ 
+            elif ch == "+" : 
+                tokens.append(Token(TokenType.PLUS,start , start)) 
+                self.next()
+
+            elif ch == "*" : 
+                tokens.append(Token(TokenType.MUL, start,start)) 
+
+                self.next()
+
+            elif ch == "-" : 
+                tokens.append(Token(TokenType.MINUS, start,start)) 
+
+                self.next()
+
+            elif ch == "/" : 
+                tokens.append(Token(TokenType.DIV, start,start)) 
+
+                self.next()
+
+            # where does (
+            elif ch == "(" :
+                tokens.append(Token(TokenType.LPAREN,start,start))
+                
+                self.next()
+
+            elif ch == ")" : 
+                tokens.append(Token(TokenType.RPAREN, start,start)) 
+
+                self.next()
+
+            elif ch == "^" : 
+                tokens.append(Token(TokenTypee.CARET, start,start))
+
+                self.next()
+
+
+            else : 
+                raise SyntaxError(
+                    "Invalid Token Found"
+                )
+
+        tokens.append(Token(TokenType.EOF, self.pos , self.pos))
+
+        return tokens
+
+
+
+
+
+
 
 
 def main(): 
-    lex = Lexer("1*2/3") 
+    lex = Lexer("1*23")
 
-    while lex.current() is not None: 
-        print(lex.current()) 
-        lex.next() 
+    print(lex.tokenize())
         
 if __name__ == "__main__" : 
     main()
