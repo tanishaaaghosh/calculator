@@ -3,17 +3,15 @@ from dataclasses import dataclass
 
 
 class TokenType(Enum):
-    POSITIVE_NUM = auto() # Any number present in Z+ 
-    NEGATIVE_NUM = auto() # Any number present in Z-
+    NUMBER=auto()  # Any number present in Z-
 
-    POSITIVE_DECIMAL = auto() 
-    NEGATIVE_DECIMAL = auto() 
+    DECIMAL= auto()
 
-    PLUS = auto() # + 
-    MINUS = auto() # -
-    MUL = auto() # * 
-    DIV = auto() # / 
-    CARET = auto() # ^ 
+    PLUS = auto()  # +
+    MINUS = auto()  # -
+    MUL = auto()  # *
+    DIV = auto()  # /
+    CARET = auto()  # ^
 
     LPAREN = auto()
     RPAREN = auto()
@@ -23,151 +21,111 @@ class TokenType(Enum):
 @dataclass
 class Token:
     type: TokenType
-    start : int 
-    end : int 
+    start: int
+    end: int
 
 
+class Lexer:
 
-class Lexer: 
+    def __init__(self, text: str):
+        self.text = text
+        self.pos = 0
 
-    def __init__(self, text:str ): 
-        self.text = text 
-        self.pos =0
+    def current(self):
 
+        if self.pos >= len(self.text):
+            return None
+        return self.text[self.pos]
 
-    def current(self): 
-
-        if self.pos >= len(self.text): 
-            return None 
-        return self.text[self.pos] 
-
-    def next(self): 
-        self.pos +=1 
-
+    def next(self):
+        self.pos += 1
 
     def peek(self):
-        if self.current() is None or self.pos + 1 == len(self.text): 
+        if self.current() is None or self.pos + 1 == len(self.text):
             return None
-        return self.text[self.pos +1]
+        return self.text[self.pos + 1]
 
-
-
-    def number(self, sign="+"): 
-        start = self.pos 
-        end = start
+    def number(self, sign="+"):
+        start = self.pos
         isdecimal = False
 
-        while (self.current() is not None and (self.current().isdigit() or self.current() == ".")): 
-            if self.current() == "." : 
+        while self.current() is not None and (self.current().isdigit() or self.current() == "."):
+            if self.current() == ".":
                 isdecimal = True
             self.next()
 
-        if sign == "-" :
-            if isdecimal : 
-                return Token(
-                    TokenType.NEGATIVE_DECIMAL, 
-                    start, 
-                    self.pos -1
-                )
-            else: 
-                return Token(
-                TokenType.NEGATIVE_NUM, 
-                start, 
-                self.pos -1
-                )
-
-        
-        if not isdecimal: 
-            return Token(
-                TokenType.POSITIVE_NUM, 
-                start, 
-                self.pos - 1
-            )
-        return Token(
-            TokenType.POSITIVE_DECIMAL, 
-            start, 
-            self.pos -1
-        )
+        if isdecimal:
+            return Token(TokenType.DECIMAL,start,self.pos)
+        else:
+            return Token(TokenType.NUMBER,start,self.pos)
 
 
-    def tokenize(self): 
+    def tokenize(self):
 
-        tokens = [] 
+        tokens = []
 
-        while self.current() is not None: 
+        while self.current() is not None:
 
-            ch = self.current() 
-            start = self.pos 
+            ch = self.current()
+            start = self.pos
 
-            if ch.isdigit(): 
-                tokens.append(self.number()) 
-
+            if ch.isdigit():
+                tokens.append(self.number())
 
             elif ch.isspace():
                 self.next()
- 
-            elif ch == "+" : 
-                tokens.append(Token(TokenType.PLUS,start , start)) 
+
+            elif ch == "+":
+                tokens.append(Token(TokenType.PLUS, start, start))
                 self.next()
 
-            elif ch == "*" : 
-                tokens.append(Token(TokenType.MUL, start,start)) 
-
-                self.next()
-
-            elif ch == "-" : 
-
-                next_ch = self.peek()
-                if next_ch is not None and next_ch.isdigit(): 
-                    self.next()
-                    tokens.append(self.number("-"))
-                else : 
-                    tokens.append(Token(TokenType.MINUS, start,start))
+            elif ch == "*":
+                tokens.append(Token(TokenType.MUL, start, start))
 
                 self.next()
 
-            elif ch == "/" : 
-                tokens.append(Token(TokenType.DIV, start,start)) 
+            elif ch == "-":
+                tokens.append(Token(TokenType.MINUS, start, start))
+                self.next()
+
+            elif ch == "/":
+                tokens.append(Token(TokenType.DIV, start, start))
 
                 self.next()
 
             # where does (
-            elif ch == "(" :
-                tokens.append(Token(TokenType.LPAREN,start,start))
-                
-                self.next()
-
-            elif ch == ")" : 
-                tokens.append(Token(TokenType.RPAREN, start,start)) 
+            elif ch == "(":
+                tokens.append(Token(TokenType.LPAREN, start, start))
 
                 self.next()
 
-            elif ch == "^" : 
-                tokens.append(Token(TokenTypee.CARET, start,start))
+            elif ch == ")":
+                tokens.append(Token(TokenType.RPAREN, start, start))
 
                 self.next()
 
+            elif ch == "^":
+                tokens.append(Token(TokenType.CARET, start, start))
 
-            else : 
+                self.next()
+
+            else:
+
                 raise SyntaxError(
                     f"Invalid Token Found at {self.pos, self.current()}"
                 )
 
-        tokens.append(Token(TokenType.EOF, self.pos , self.pos))
+        tokens.append(Token(TokenType.EOF, self.pos, self.pos))
 
         return tokens
 
 
 
-
-
-
-
-
-def main(): 
+def main():
     lex = Lexer("1* -23 / 2.4")
 
     print(lex.tokenize())
-        
-if __name__ == "__main__" : 
+
+
+if __name__ == "__main__":
     main()
