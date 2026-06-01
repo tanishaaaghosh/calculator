@@ -18,7 +18,6 @@ class TokenType(Enum):
 
     EOF = auto()
 
-
 @dataclass
 class Token:
     type: TokenType
@@ -73,7 +72,6 @@ class Lexer:
             if ch.isdigit():
                 tokens.append(self.number())
 
-
             elif ch.isspace():
                 self.next()
 
@@ -111,8 +109,8 @@ class Lexer:
 
                 self.next()
 
-
             else:
+
                 raise SyntaxError(
                     f"Invalid Token Found at {self.pos, self.current()}"
                 )
@@ -120,6 +118,7 @@ class Lexer:
         tokens.append(Token(TokenType.EOF, self.pos, self.pos))
 
         return tokens
+
 
 
 def main():
